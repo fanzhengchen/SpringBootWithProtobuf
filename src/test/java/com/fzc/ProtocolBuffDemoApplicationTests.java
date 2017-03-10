@@ -15,6 +15,8 @@ import retrofit2.converter.protobuf.ProtoConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(SpringRunner.class)
@@ -75,7 +77,7 @@ public class ProtocolBuffDemoApplicationTests {
             public void onResponse(Call<PersonProto> call, Response<PersonProto> response) {
                 System.out.println(response);
                 latch.countDown();
-                
+
             }
 
             @Override
@@ -84,5 +86,28 @@ public class ProtocolBuffDemoApplicationTests {
             }
         });
         latch.await();
+
+        PersonProto personProto = PersonProto.newBuilder()
+                .build();
+
+    }
+
+    @Test
+    public void serializeAndDeserialize() throws Exception{
+        PersonProto personProto = PersonProto.newBuilder()
+                .setAge(4454)
+                .setSecondName("asfdafda")
+                .setFirstName("aaaa")
+                .addPhoneNumbers(PersonProto.PhoneNumber.newBuilder()
+                        .setPhoneNumber(4554)
+                        .setAreaCode(4545)
+                        .build())
+                .build();
+
+        byte[] bytes = personProto.toByteArray();
+
+        PersonProto proto = PersonProto.parseFrom(bytes);
+//        InputStream inputStream = null;
+//        inputStream.
     }
 }
