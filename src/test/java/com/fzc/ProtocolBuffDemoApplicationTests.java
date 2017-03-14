@@ -4,8 +4,10 @@ import com.fzc.domain.Person;
 import com.fzc.domain.proto.PersonProto;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.*;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -60,6 +62,11 @@ public class ProtocolBuffDemoApplicationTests {
             .addConverterFactory(ProtoConverterFactory.create())
             .build()
             .create(ApiService.class);
+
+    @BeforeClass
+    public static void before() {
+//        SpringApplication.run(ProtocolBuffDemoApplication.class);
+    }
 
     @Test
     public void testJson() throws Exception {

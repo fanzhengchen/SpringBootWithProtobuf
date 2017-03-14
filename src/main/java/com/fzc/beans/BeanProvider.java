@@ -34,23 +34,10 @@ public class BeanProvider {
         return factory;
     }
 
-
-//    @Bean
-//    public JettyEmbeddedServletContainerFactory jettyEmbeddedServletContainerFactory(){
-//        JettyEmbeddedServletContainerFactory factory = new JettyEmbeddedServletContainerFactory();
-//        factory.addServerCustomizers(new JettyServerCustomizer() {
-//            @Override
-//            public void customize(org.eclipse.jetty.server.Server server) {
-//
-//            }
-//        });
-//    }
-
     @Bean
     public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
         return new ProtobufHttpMessageConverter();
     }
-
 
 
     @Bean
