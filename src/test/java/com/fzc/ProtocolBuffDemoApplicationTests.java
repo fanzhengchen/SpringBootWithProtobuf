@@ -2,9 +2,12 @@ package com.fzc;
 
 import com.fzc.domain.Person;
 import com.fzc.domain.proto.PersonProto;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.*;
 import org.springframework.test.context.junit4.SpringRunner;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -15,8 +18,17 @@ import retrofit2.converter.protobuf.ProtoConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 
-import java.io.IOException;
+import javax.net.SocketFactory;
+import javax.net.ssl.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(SpringRunner.class)
@@ -93,7 +105,7 @@ public class ProtocolBuffDemoApplicationTests {
     }
 
     @Test
-    public void serializeAndDeserialize() throws Exception{
+    public void serializeAndDeserialize() throws Exception {
         PersonProto personProto = PersonProto.newBuilder()
                 .setAge(4454)
                 .setSecondName("asfdafda")
@@ -109,5 +121,71 @@ public class ProtocolBuffDemoApplicationTests {
         PersonProto proto = PersonProto.parseFrom(bytes);
 //        InputStream inputStream = null;
 //        inputStream.
+    }
+
+    @Test
+    public void testHttp2WithHttps() throws Exception {
+
+        X509Certificate[] x509Certificates = new X509Certificate[1];
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+
+        Certificate certificate = CertificateFactory.getInstance("X.509")
+                .generateCertificate(loadCertificate());
+        keyStore.load(null);
+        keyStore.setCertificateEntry("mycer", certificate);
+
+        x509Certificates[0] = (X509Certificate) certificate;
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory
+                .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(keyStore);
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .hostnameVerifier(new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String s, SSLSession sslSession) {
+                        return true;
+                    }
+                })
+                .sslSocketFactory(sslContext.getSocketFactory(), new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+                    }
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+                    }
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return x509Certificates;
+                    }
+                })
+                .build();
+
+        Request request = new Request.Builder()
+                .url("https://127.0.0.1:9000/person/json")
+                .build();
+
+        okhttp3.Response response = client.newCall(request).execute();
+
+        System.out.println(response.body().string());
+    }
+
+
+    public InputStream loadCertificate() throws Exception {
+        ResourceLoader loader = new DefaultResourceLoader();
+        Resource resource = loader.getResource("classpath:my.cer");
+        boolean exit = resource.exists();
+
+        ClassPathResource classPathResource = (ClassPathResource) resource;
+        return classPathResource.getInputStream();
     }
 }
